@@ -1,42 +1,60 @@
 package httpapi
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
-	//orderpb "github.com/yourgithubusername/yourrepository/order" // Импорт вашего прото-пакета
 	"go_task/messaging"
+	"go_task/protofile"
+	"net/http"
 )
 
-type API struct {
-	// Здесь могут быть другие зависимости
+type HTTPHandler struct {
+	publisher *messaging.Publisher
+	// Другие зависимости, если необходимо
 }
 
-func NewAPI() *API {
-	return &API{}
+func NewHTTPHandler(publisher *messaging.Publisher) *HTTPHandler {
+	return &HTTPHandler{
+		publisher: publisher,
+	}
 }
 
-func (api *API) CreateOrderHandler(c *gin.Context) {
-	var orderRequest orderpb.CreateOrderRequest // Использование модели из протофайла
+func (h *HTTPHandler) RegisterRoutes(router *gin.Engine) {
+	router.POST("/createOrder", h.CreateOrder)
+	router.POST("/createAccountBalance", h.CreateAccountBalance)
+}
 
-	// Получаем JSON из запроса
-	requestData, err := c.GetRawData()
+func (h *HTTPHandler) CreateOrder(c *gin.Context) {
+	var request protofile.CreateOrderRequest
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Отправка сообщения в RabbitMQ
+	err := h.publisher.PublishOrder(&request)
 	if err != nil {
-		c.JSON(400, gin.H{"error": "Failed to parse request data"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish order"})
 		return
 	}
 
-	// Парсим JSON в протоструктуру
-	if err := json.Unmarshal(requestData, &orderRequest); err != nil {
-		c.JSON(400, gin.H{"error": "Failed to parse JSON"})
+	c.JSON(http.StatusOK, gin.H{"message": "Order created successfully"})
+}
+
+func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
+	var request protofile.CreateAccountBalance
+
+	if err := c.ShouldBindJSON(&request); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Отправляем запрос в RabbitMQ
-	err = messaging.PublishOrderRequest(orderRequest)
+	// Отправка сообщения в RabbitMQ
+	err := h.publisher.PublishAccountBalance(&request)
 	if err != nil {
-		c.JSON(500, gin.H{"error": "Failed to process order"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish account balance"})
 		return
 	}
 
-	c.JSON(200, gin.H{"message": "Order sent successfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Account balance created successfully"})
 }

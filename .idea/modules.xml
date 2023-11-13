@@ -2,9 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/balances.iml" filepath="$PROJECT_DIR$/balances.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/go_task.iml" filepath="$PROJECT_DIR$/.idea/go_task.iml" />
-      <module fileurl="file://$PROJECT_DIR$/httpapi.iml" filepath="$PROJECT_DIR$/httpapi.iml" />
       <module fileurl="file://$PROJECT_DIR$/messaging.iml" filepath="$PROJECT_DIR$/messaging.iml" />
     </modules>
   </component>

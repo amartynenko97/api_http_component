@@ -2,46 +2,54 @@ package messaging
 
 import (
 	"github.com/streadway/amqp"
+	"go_task/protofile"
 	"log"
 )
 
-func PublishMessage(message string) {
-	conn, err := amqp.Dial("amqp://guest:guest@localhost:5672/") // Establish connection
+func (p *Publisher) PublishAccountBalance(accountBalance *protofile.CreateAccountBalance) error {
+	messageBody, err := json.Marshal(accountBalance)
 	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %s", err)
-	}
-	defer conn.Close()
-
-	ch, err := conn.Channel() // Create a channel
-	if err != nil {
-		log.Fatalf("Failed to open a channel: %s", err)
-	}
-	defer ch.Close()
-
-	q, err := ch.QueueDeclare(
-		"queue_name", // Queue name
-		false,        // Durable
-		false,        // Delete when unused
-		false,        // Exclusive
-		false,        // No-wait
-		nil,          // Arguments
-	)
-	if err != nil {
-		log.Fatalf("Failed to declare a queue: %s", err)
+		log.Println("Failed to marshal account balance message:", err)
+		return err
 	}
 
-	err = ch.Publish(
-		"",     // Exchange
-		q.Name, // Routing key
-		false,  // Mandatory
-		false,  // Immediate
+	err = p.channel.Publish(
+		"your_exchange_name",
+		"account_balance_routing_key",
+		false,
+		false,
 		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        []byte(message),
-		})
+			ContentType: "application/json",
+			Body:        messageBody,
+		},
+	)
+
 	if err != nil {
-		log.Fatalf("Failed to publish a message: %s", err)
+		log.Println("Failed to publish account balance message:", err)
+		return err
 	}
 
-	log.Printf("Message sent: %s", message)
+	log.Println("Account balance message published successfully")
+	return nil
+}
+
+func (p *Publisher) PublishOrder(orderBody []byte) error {
+	err := p.channel.Publish(
+		"your_exchange_name",
+		"order_routing_key",
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/octet-stream", // Установка типа контента на application/octet-stream
+			Body:        orderBody,
+		},
+	)
+
+	if err != nil {
+		log.Println("Failed to publish order message:", err)
+		return err
+	}
+
+	log.Println("Order message published successfully")
+	return nil
 }
