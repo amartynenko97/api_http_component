@@ -19,7 +19,7 @@ func main() {
 	publisher := messaging.NewPublisher(messageBroker.GetChannel())
 	listener := messaging.NewListener(messageBroker.GetChannel())
 
-	// Передача экземпляров publisher и listener в httpHandler
+	// Передача экземпляра publisher в httpHandler
 	httpHandler.SetPublisher(publisher)
 
 	// Регистрация маршрутов

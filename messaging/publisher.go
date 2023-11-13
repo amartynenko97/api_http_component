@@ -1,12 +1,25 @@
 package messaging
 
 import (
+	"encoding/json"
 	"github.com/streadway/amqp"
 	"go_task/protofile"
 	"log"
 )
 
+type Publisher struct {
+	channel *amqp.Channel
+	// Другие поля, если нужно
+}
+
+func NewPublisher(channel *amqp.Channel) *Publisher {
+	return &Publisher{
+		channel: channel,
+	}
+}
+
 func (p *Publisher) PublishAccountBalance(accountBalance *protofile.CreateAccountBalance) error {
+	// Преобразование структуры в бинарный формат протобуфа
 	messageBody, err := json.Marshal(accountBalance)
 	if err != nil {
 		log.Println("Failed to marshal account balance message:", err)
@@ -19,7 +32,7 @@ func (p *Publisher) PublishAccountBalance(accountBalance *protofile.CreateAccoun
 		false,
 		false,
 		amqp.Publishing{
-			ContentType: "application/json",
+			ContentType: "application/octet-stream",
 			Body:        messageBody,
 		},
 	)
@@ -30,26 +43,5 @@ func (p *Publisher) PublishAccountBalance(accountBalance *protofile.CreateAccoun
 	}
 
 	log.Println("Account balance message published successfully")
-	return nil
-}
-
-func (p *Publisher) PublishOrder(orderBody []byte) error {
-	err := p.channel.Publish(
-		"your_exchange_name",
-		"order_routing_key",
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "application/octet-stream", // Установка типа контента на application/octet-stream
-			Body:        orderBody,
-		},
-	)
-
-	if err != nil {
-		log.Println("Failed to publish order message:", err)
-		return err
-	}
-
-	log.Println("Order message published successfully")
 	return nil
 }
