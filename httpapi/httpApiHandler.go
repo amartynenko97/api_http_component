@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"go_task/messaging"
+	"go_task/protofile"
 	"net/http"
 )
 
@@ -23,7 +24,7 @@ func (h *HTTPHandler) RegisterRoutes(router *gin.Engine) {
 }
 
 func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
-	var request structure.CreateAccountBalance
+	var request protofile.CreateOrderRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
