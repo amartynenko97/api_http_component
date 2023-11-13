@@ -16,7 +16,8 @@ type MessageBroker struct {
 }
 
 type Handler struct {
-	channel chan amqp.Publishing
+	publishingChannel chan amqp.Publishing
+	listeningChannel  chan amqp.Delivery
 }
 
 func NewMessageBroker(config RabbitMQConfig) (*MessageBroker, error) {
@@ -33,7 +34,8 @@ func NewMessageBroker(config RabbitMQConfig) (*MessageBroker, error) {
 	}
 
 	handler := &Handler{
-		channel: make(chan amqp.Publishing),
+		publishingChannel: make(chan amqp.Publishing),
+		listeningChannel:  make(chan amqp.Delivery),
 	}
 
 	return &MessageBroker{
@@ -43,8 +45,12 @@ func NewMessageBroker(config RabbitMQConfig) (*MessageBroker, error) {
 	}, nil
 }
 
-func (m *MessageBroker) GetChannel() chan<- amqp.Publishing {
-	return m.handler.channel
+func (m *MessageBroker) GetPublishingChannel() chan<- amqp.Publishing {
+	return m.handler.publishingChannel
+}
+
+func (m *MessageBroker) GetListeningChannel() <-chan amqp.Delivery {
+	return m.handler.listeningChannel
 }
 
 func (m *MessageBroker) Close() {

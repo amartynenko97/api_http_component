@@ -3,20 +3,29 @@ package httpapi
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
-	"go_task/messaging"
+	"github.com/streadway/amqp"
 	"go_task/protofile"
 	"net/http"
 )
 
 type HTTPHandler struct {
-	publisher *messaging.Publisher
-	// Другие зависимости, если необходимо
+	publishingChannel chan<- amqp.Publishing
+	listeningChannel  <-chan amqp.Delivery
 }
 
-func NewHTTPHandler(publisher *messaging.Publisher) *HTTPHandler {
+func NewHTTPHandler(publishingChannel chan<- amqp.Publishing, listeningChannel <-chan amqp.Delivery) *HTTPHandler {
 	return &HTTPHandler{
-		publisher: publisher,
+		publishingChannel: publishingChannel,
+		listeningChannel:  listeningChannel,
 	}
+}
+
+func (h *HTTPHandler) SetPublishingChannel(channel chan<- amqp.Publishing) {
+	h.publishingChannel = channel
+}
+
+func (h *HTTPHandler) SetListeningChannel(channel <-chan amqp.Delivery) {
+	h.listeningChannel = channel
 }
 
 func (h *HTTPHandler) RegisterRoutes(router *gin.Engine) {
@@ -39,7 +48,7 @@ func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
 	}
 
 	// Отправка сообщения в RabbitMQ
-	err = h.publisher.PublishAccountBalance(protoData)
+	err = h.publishingChannel.PublishAccountBalance(protoData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish account balance"})
 		return

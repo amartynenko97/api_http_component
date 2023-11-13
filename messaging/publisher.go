@@ -1,39 +1,32 @@
 package messaging
 
 import (
-	"encoding/json"
 	"github.com/streadway/amqp"
-	"go_task/protofile"
 	"log"
 )
 
 type Publisher struct {
 	channel *amqp.Channel
-	// Другие поля, если нужно
+	// Other fields, if any
 }
 
+// NewPublisher creates a new instance of Publisher
 func NewPublisher(channel *amqp.Channel) *Publisher {
 	return &Publisher{
 		channel: channel,
 	}
 }
 
-func (p *Publisher) PublishAccountBalance(accountBalance *protofile.CreateAccountBalance) error {
-	// Преобразование структуры в бинарный формат протобуфа
-	messageBody, err := json.Marshal(accountBalance)
-	if err != nil {
-		log.Println("Failed to marshal account balance message:", err)
-		return err
-	}
-
-	err = p.channel.Publish(
+// PublishAccountBalance publishes an account balance message to RabbitMQ
+func (p *Publisher) PublishAccountBalance(protoData []byte) error {
+	err := p.channel.Publish(
 		"your_exchange_name",
 		"account_balance_routing_key",
 		false,
 		false,
 		amqp.Publishing{
 			ContentType: "application/octet-stream",
-			Body:        messageBody,
+			Body:        protoData, // Update to use protoData directly
 		},
 	)
 

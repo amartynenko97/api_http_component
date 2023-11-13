@@ -1,11 +1,16 @@
-FROM golang:1.16
+FROM golang:latest
 
-WORKDIR /app
+WORKDIR /app/messaging
 
-COPY ../messaging .
+COPY go.mod .
+COPY go.sum .
 
-RUN go build -o messaging-app .
+RUN go mod download
+
+COPY . .
+
+RUN go build -o messaging
 
 EXPOSE 8080
 
-CMD ["./messaging-app"]
+CMD ["./messaging"]

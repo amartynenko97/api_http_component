@@ -8,35 +8,27 @@ import (
 )
 
 func main() {
-	// Инициализация маршрутизатора Gin
-	router := gin.Default()
-
-	// Инициализация и настройка обработчика HTTP API
-	httpHandler := httpapi.NewHTTPHandler()
-
-	// Инициализация и настройка мессенджера (publisher и listener)
 	rabbitMQConfig := messaging.RabbitMQConfig{
-		URL: "amqp://guest:guest@localhost:5672/", // Replace with your RabbitMQ server URL
+		URL: "amqp://guest:guest@localhost:5672/", // Update with your RabbitMQ server details
 	}
 
 	messageBroker, err := messaging.NewMessageBroker(rabbitMQConfig)
 	if err != nil {
 		log.Fatal("Failed to initialize MessageBroker:", err)
+		return
 	}
 	defer messageBroker.Close()
 
-	publisher := messaging.NewPublisher(messageBroker.handler.channel)
-	listener := messaging.NewListener(messageBroker.channel)
+	router := gin.Default()
 
-	// Передача экземпляра publisher в httpHandler
-	httpHandler.SetPublisher(publisher)
+	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
 
-	// Регистрация маршрутов
+	httpHandler.StartListener()
+
 	httpHandler.RegisterRoutes(router)
 
-	// Запуск HTTP-сервера
 	err = router.Run(":8080")
 	if err != nil {
-		log.Fatal("Failed to start the server: ", err)
+		log.Fatal("Failed to start the server:", err)
 	}
 }
