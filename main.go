@@ -15,9 +15,18 @@ func main() {
 	httpHandler := httpapi.NewHTTPHandler()
 
 	// Инициализация и настройка мессенджера (publisher и listener)
-	messageBroker := messaging.NewMessageBroker()
-	publisher := messaging.NewPublisher(messageBroker.GetChannel())
-	listener := messaging.NewListener(messageBroker.GetChannel())
+	rabbitMQConfig := messaging.RabbitMQConfig{
+		URL: "amqp://guest:guest@localhost:5672/", // Replace with your RabbitMQ server URL
+	}
+
+	messageBroker, err := messaging.NewMessageBroker(rabbitMQConfig)
+	if err != nil {
+		log.Fatal("Failed to initialize MessageBroker:", err)
+	}
+	defer messageBroker.Close()
+
+	publisher := messaging.NewPublisher(messageBroker.handler.channel)
+	listener := messaging.NewListener(messageBroker.channel)
 
 	// Передача экземпляра publisher в httpHandler
 	httpHandler.SetPublisher(publisher)
@@ -26,7 +35,7 @@ func main() {
 	httpHandler.RegisterRoutes(router)
 
 	// Запуск HTTP-сервера
-	err := router.Run(":8080")
+	err = router.Run(":8080")
 	if err != nil {
 		log.Fatal("Failed to start the server: ", err)
 	}
