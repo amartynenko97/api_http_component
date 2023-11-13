@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package protofile;
+import "google/protobuf/timestamp.proto";
+option go_package = "./protofile/";
+
+message CreateOrderRequest {
+  string orderId = 1;
+  string userId = 2;
+  string symbol = 3;
+  string price = 4;
+  string volume = 5;
+  OrderType orderType = 6;
+  OrderStatus orderStatus = 7;
+  google.protobuf.Timestamp createDate = 8;
+}
+
+message CreateAccountBalance {
+  string userId = 1;
+  string symbol = 2;
+  string newBalance = 3;
+}
+
+enum OrderType {
+  TYPE_UNSPECIFIED = 0;
+  TYPE_MARKET = 1;
+  TYPE_LIMIT = 2;
+}
+
+enum OrderStatus {
+  STATUS_UNSPECIFIED = 0;
+  STATUS_NEW = 1;
+  STATUS_PART_FILL = 2;
+  STATUS_FILL = 3;
+  STATUS_DONE = 4;
+}
+
+enum Direction {
+  DIRECTION_UNSPECIFIED = 0;
+  DIRECTION_SELL = 1;
+  DIRECTION_BUY = 2;
+}
+
+
