@@ -10,13 +10,11 @@ import (
 
 type HTTPHandler struct {
 	publishingChannel messaging.PublishingChannel
-	listeningChannel  messaging.ListeningChannel
 }
 
-func NewHTTPHandler(publishingChannel messaging.PublishingChannel, listeningChannel messaging.ListeningChannel) *HTTPHandler {
+func NewHTTPHandler(publishingChannel messaging.PublishingChannel) *HTTPHandler {
 	return &HTTPHandler{
 		publishingChannel: publishingChannel,
-		listeningChannel:  listeningChannel,
 	}
 }
 

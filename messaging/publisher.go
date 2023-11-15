@@ -7,7 +7,6 @@ import (
 
 type Publisher struct {
 	channel *amqp.Channel
-	// Other fields, if any
 }
 
 func NewPublisher(channel *amqp.Channel) *Publisher {
@@ -17,12 +16,10 @@ func NewPublisher(channel *amqp.Channel) *Publisher {
 }
 
 func (p *Publisher) PublishAccountBalance(protoData []byte) error {
-	// Реализация для AccountBalance
 	return p.publish(protoData, "account_balance_routing_key")
 }
 
 func (p *Publisher) PublishCreateOrder(protoData []byte) error {
-	// Реализация для CreateOrder
 	return p.publish(protoData, "create_order_routing_key")
 }
 

@@ -2,6 +2,7 @@ package go_task
 
 import (
 	"github.com/gin-gonic/gin"
+	"go_task/balances"
 	"go_task/httpapi"
 	"go_task/messaging"
 	"log"
@@ -21,9 +22,11 @@ func main() {
 
 	router := gin.Default()
 
-	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
+	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel())
 
-	httpHandler.StartListener()
+	balancesHandler := balances.NewBalancesHandler(messageBroker.GetListeningChannel())
+
+	//httpHandler.StartListener()
 
 	httpHandler.RegisterRoutes(router)
 

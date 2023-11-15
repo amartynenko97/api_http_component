@@ -6,9 +6,10 @@ import (
 )
 
 type Listener struct {
-	channel           *amqp.Channel
-	accountBalances   <-chan amqp.Delivery
-	createOrderEvents <-chan amqp.Delivery
+	channel *amqp.Channel
+	//accountBalances   <-chan amqp.Delivery
+	//createOrderEvents <-chan amqp.Delivery
+	//BalancesHandler   *balances.BalancesHandler
 }
 
 func NewListener(channel *amqp.Channel) *Listener {
@@ -17,24 +18,19 @@ func NewListener(channel *amqp.Channel) *Listener {
 	}
 }
 
-func (l *Listener) StartListening() {
-	// Запустите цикл для прослушивания обеих очередей
-	go func() {
-		for {
-			select {
-			case accountBalance := <-l.accountBalances:
-				// Обработка сообщения для балансов
-				// accountBalance.Body содержит тело сообщения
-				// ...
-
-			case createOrder := <-l.createOrderEvents:
-				// Обработка сообщения для создания заказов
-				// createOrder.Body содержит тело сообщения
-				// ...
-			}
-		}
-	}()
-}
+//func (l *Listener) StartListening() {
+//	l.accountBalances = l.ConsumeAccountBalances()
+//	//l.createOrderEvents = l.ConsumeCreateOrders()
+//
+//	go func() {
+//		for {
+//			select {
+//			case accountBalance := <-l.accountBalances:
+//				l.BalancesHandler(accountBalance)
+//			}
+//		}
+//	}()
+//}
 
 func (l *Listener) ConsumeAccountBalances() <-chan amqp.Delivery {
 	return l.consume("account_balance_queue_name", "account_balance_consumer")
