@@ -2,14 +2,13 @@ package messaging
 
 import (
 	"github.com/streadway/amqp"
-	"go_task/protofile"
-	"google.golang.org/protobuf/proto"
 	"log"
 )
 
 type Listener struct {
-	channel *amqp.Channel
-	// Другие поля, если нужно
+	channel           *amqp.Channel
+	accountBalances   <-chan amqp.Delivery
+	createOrderEvents <-chan amqp.Delivery
 }
 
 func NewListener(channel *amqp.Channel) *Listener {
@@ -18,10 +17,37 @@ func NewListener(channel *amqp.Channel) *Listener {
 	}
 }
 
-func (l *Listener) ListenForAccountBalances() {
+func (l *Listener) StartListening() {
+	// Запустите цикл для прослушивания обеих очередей
+	go func() {
+		for {
+			select {
+			case accountBalance := <-l.accountBalances:
+				// Обработка сообщения для балансов
+				// accountBalance.Body содержит тело сообщения
+				// ...
+
+			case createOrder := <-l.createOrderEvents:
+				// Обработка сообщения для создания заказов
+				// createOrder.Body содержит тело сообщения
+				// ...
+			}
+		}
+	}()
+}
+
+func (l *Listener) ConsumeAccountBalances() <-chan amqp.Delivery {
+	return l.consume("account_balance_queue_name", "account_balance_consumer")
+}
+
+func (l *Listener) ConsumeCreateOrders() <-chan amqp.Delivery {
+	return l.consume("create_order_queue_name", "create_order_consumer")
+}
+
+func (l *Listener) consume(queueName, consumerName string) <-chan amqp.Delivery {
 	messages, err := l.channel.Consume(
-		"your_queue_name_account_balance",
-		"account_balance_consumer",
+		queueName,
+		consumerName,
 		true,
 		false,
 		false,
@@ -30,21 +56,8 @@ func (l *Listener) ListenForAccountBalances() {
 	)
 
 	if err != nil {
-		log.Fatal("Failed to register a consumer for account balances:", err)
+		log.Fatal("Failed to register a consumer:", err)
 	}
 
-	for msg := range messages {
-		// Преобразование бинарных данных из RabbitMQ в protobuf
-		var accountBalance protofile.CreateAccountBalance
-		err := proto.Unmarshal(msg.Body, &accountBalance)
-		if err != nil {
-			log.Println("Failed to unmarshal account balance message:", err)
-			// Ваш код обработки ошибки, если это необходимо
-			continue
-		}
-
-		// Логика обработки сообщения о создании баланса аккаунта
-		// Ваш код здесь
-		log.Printf("Received account balance message: %+v\n", accountBalance)
-	}
+	return messages
 }

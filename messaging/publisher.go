@@ -10,31 +10,39 @@ type Publisher struct {
 	// Other fields, if any
 }
 
-// NewPublisher creates a new instance of Publisher
 func NewPublisher(channel *amqp.Channel) *Publisher {
 	return &Publisher{
 		channel: channel,
 	}
 }
 
-// PublishAccountBalance publishes an account balance message to RabbitMQ
 func (p *Publisher) PublishAccountBalance(protoData []byte) error {
+	// Реализация для AccountBalance
+	return p.publish(protoData, "account_balance_routing_key")
+}
+
+func (p *Publisher) PublishCreateOrder(protoData []byte) error {
+	// Реализация для CreateOrder
+	return p.publish(protoData, "create_order_routing_key")
+}
+
+func (p *Publisher) publish(protoData []byte, routingKey string) error {
 	err := p.channel.Publish(
 		"your_exchange_name",
-		"account_balance_routing_key",
+		routingKey,
 		false,
 		false,
 		amqp.Publishing{
 			ContentType: "application/octet-stream",
-			Body:        protoData, // Update to use protoData directly
+			Body:        protoData,
 		},
 	)
 
 	if err != nil {
-		log.Println("Failed to publish account balance message:", err)
+		log.Println("Failed to publish message:", err)
 		return err
 	}
 
-	log.Println("Account balance message published successfully")
+	log.Printf("Message published successfully with routing key: %s\n", routingKey)
 	return nil
 }

@@ -9,7 +9,7 @@ import (
 
 func main() {
 	rabbitMQConfig := messaging.RabbitMQConfig{
-		URL: "amqp://guest:guest@localhost:5672/", // Update with your RabbitMQ server details
+		URL: "amqp://guest:guest@localhost:5672/",
 	}
 
 	messageBroker, err := messaging.NewMessageBroker(rabbitMQConfig)
