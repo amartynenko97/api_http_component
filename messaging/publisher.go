@@ -16,16 +16,16 @@ func NewPublisher(channel *amqp.Channel) *Publisher {
 }
 
 func (p *Publisher) PublishAccountBalance(protoData []byte) error {
-	return p.publish(protoData, "account_balance_routing_key")
+	return p.publish(protoData, "balances_events", "rk_create_balance")
 }
 
 func (p *Publisher) PublishCreateOrder(protoData []byte) error {
-	return p.publish(protoData, "create_order_routing_key")
+	return p.publish(protoData, "orders_events", "rk_create_order")
 }
 
-func (p *Publisher) publish(protoData []byte, routingKey string) error {
+func (p *Publisher) publish(protoData []byte, exchange string, routingKey string) error {
 	err := p.channel.Publish(
-		"your_exchange_name",
+		exchange,
 		routingKey,
 		false,
 		false,
