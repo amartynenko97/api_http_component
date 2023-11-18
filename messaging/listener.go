@@ -7,9 +7,6 @@ import (
 
 type Listener struct {
 	channel *amqp.Channel
-	//accountBalances   <-chan amqp.Delivery
-	//createOrderEvents <-chan amqp.Delivery
-	//BalancesHandler   *balances.BalancesHandler
 }
 
 func NewListener(channel *amqp.Channel) *Listener {
@@ -17,20 +14,6 @@ func NewListener(channel *amqp.Channel) *Listener {
 		channel: channel,
 	}
 }
-
-//func (l *Listener) StartListening() {
-//	l.accountBalances = l.ConsumeAccountBalances()
-//	//l.createOrderEvents = l.ConsumeCreateOrders()
-//
-//	go func() {
-//		for {
-//			select {
-//			case accountBalance := <-l.accountBalances:
-//				l.BalancesHandler(accountBalance)
-//			}
-//		}
-//	}()
-//}
 
 func (l *Listener) ConsumeAccountBalances() <-chan amqp.Delivery {
 	return l.consume("account_balance_queue_name", "account_balance_consumer")

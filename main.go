@@ -5,10 +5,16 @@ import (
 	"go_task/balances"
 	"go_task/httpapi"
 	"go_task/messaging"
+	"golang.org/x/net/context"
 	"log"
+	"sync"
 )
 
 func main() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	var wg sync.WaitGroup
+
 	rabbitMQConfig := messaging.RabbitMQConfig{
 		URL: "amqp://guest:guest@localhost:5672/",
 	}
@@ -26,12 +32,20 @@ func main() {
 
 	balancesHandler := balances.NewBalancesHandler(messageBroker.GetListeningChannel())
 
-	//httpHandler.StartListener()
-
 	httpHandler.RegisterRoutes(router)
 
-	err = router.Run(":8080")
-	if err != nil {
-		log.Fatal("Failed to start the server:", err)
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		balancesHandler.StartListener(ctx)
+	}()
+
+	go func() {
+		err := router.Run(":8080")
+		if err != nil {
+			log.Fatal("Failed to start the server:", err)
+			cancel()
+		}
+	}()
+	wg.Wait()
 }
