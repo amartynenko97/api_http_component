@@ -37,5 +37,5 @@ func (h *BalancesHandler) StartListener(ctx context.Context) error {
 func (h *BalancesHandler) processAccountBalance(protoData []byte) error {
 	// Логика обработки сообщения
 	// В случае ошибки:
-	return fmt.Errorf("error processing account balance: %s", errorMessage)
+	return fmt.Errorf("error processing account balance: %s")
 }
