@@ -3,16 +3,19 @@ package httpapi
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"go_task"
 	"go_task/messaging"
 	"go_task/protofile"
+	"log"
 	"net/http"
 )
 
 type HTTPHandler struct {
 	publishingChannel messaging.PublishingChannel
+	errorHandler      go_task.ErrorHandler
 }
 
-func NewHTTPHandler(publishingChannel messaging.PublishingChannel) *HTTPHandler {
+func NewHTTPHandler(publishingChannel messaging.PublishingChannel, errorHandler ErrorHandler) *HTTPHandler {
 	return &HTTPHandler{
 		publishingChannel: publishingChannel,
 	}
@@ -44,6 +47,15 @@ func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Account balance created successfully"})
+}
+
+func (h *HTTPHandler) HandleError(c *gin.Context, statusCode int, data gin.H) {
+	if c != nil {
+		c.JSON(statusCode, data)
+	} else {
+		// Обработка ситуации без контекста Gin (например, вне HTTP-запроса)
+		log.Println("Handling error without Gin context:", data)
+	}
 }
 
 //func (h *HTTPHandler) GetAccountBalance(c *gin.Context) {

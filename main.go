@@ -3,7 +3,6 @@ package go_task
 import (
 	"github.com/gin-gonic/gin"
 	"go_task/balances"
-	"go_task/constants"
 	"go_task/httpapi"
 	"go_task/messaging"
 	"golang.org/x/net/context"
@@ -30,13 +29,23 @@ func main() {
 
 	router := gin.Default()
 
-	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel())
+	errorHandler := &ErrorHandlerImpl{}
+	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), errorHandler)
+	balancesHandler := balances.NewBalancesHandler(messageBroker.GetListeningChannel(), errorHandler)
 
-	balancesHandler := balances.NewBalancesHandler(messageBroker.GetListeningChannel())
-
-	httpHandler.RegisterRoutes(router)
+	httpHandler.RegisterRoutes(router, errorHandler)
 
 	errorChannel := make(chan error, 1)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err := router.Run(":8080")
+		if err != nil {
+			errorHandler.HandleError(http.StatusInternalServerError, gin.H{"error": "Failed to start the server"})
+			cancel()
+		}
+	}()
 
 	go func() {
 		defer wg.Done()
@@ -46,25 +55,5 @@ func main() {
 		}
 	}()
 
-	select {
-	case err := <-errorChannel:
-		switch err := err.(type) {
-		case *constants.CustomError:
-			log.Printf("Custom error")
-			c.JSON(http.StatusBadRequest, gin.H{"error": string(err.Type)})
-		default:
-			log.Printf("Error in one of the components")
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
-		}
-	case <-ctx.Done():
-	}
-
-	go func() {
-		err := router.Run(":8080")
-		if err != nil {
-			log.Fatal("Failed to start the server:", err)
-			cancel()
-		}
-	}()
 	wg.Wait()
 }
