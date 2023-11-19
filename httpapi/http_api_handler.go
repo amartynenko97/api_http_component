@@ -20,7 +20,7 @@ func NewHTTPHandler(publishingChannel messaging.PublishingChannel) *HTTPHandler 
 
 func (h *HTTPHandler) RegisterRoutes(router *gin.Engine) {
 	router.POST("/createAccountBalance", h.CreateAccountBalance)
-	router.POST("/createOrder", h.CreateOrder)
+	//router.GET("/createOrder", h.GetAccountBalance)
 }
 
 func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
@@ -37,7 +37,7 @@ func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
 		return
 	}
 
-	err = h.publishingChannel.PublishAccountBalance(protoData)
+	err = h.publishingChannel.PublishCreateAccountBalances(protoData)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish account balance"})
 		return
@@ -46,25 +46,25 @@ func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Account balance created successfully"})
 }
 
-func (h *HTTPHandler) CreateOrder(c *gin.Context) {
-	var request protofile.CreateOrderRequest
-
-	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	protoData, err := json.Marshal(&request)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal create order message"})
-		return
-	}
-
-	err = h.publishingChannel.PublishCreateOrder(protoData)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish create order"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Create order successfully"})
-}
+//func (h *HTTPHandler) GetAccountBalance(c *gin.Context) {
+//	var request protofile.CreateOrderRequest
+//
+//	if err := c.ShouldBindJSON(&request); err != nil {
+//		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+//		return
+//	}
+//
+//	protoData, err := json.Marshal(&request)
+//	if err != nil {
+//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal create order message"})
+//		return
+//	}
+//
+//	err = h.publishingChannel.PublishGetAccountBalances(protoData)
+//	if err != nil {
+//		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish create order"})
+//		return
+//	}
+//
+//	c.JSON(http.StatusOK, gin.H{"message": "Create order successfully"})
+//}

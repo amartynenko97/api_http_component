@@ -3,10 +3,12 @@ package go_task
 import (
 	"github.com/gin-gonic/gin"
 	"go_task/balances"
+	"go_task/constants"
 	"go_task/httpapi"
 	"go_task/messaging"
 	"golang.org/x/net/context"
 	"log"
+	"net/http"
 	"sync"
 )
 
@@ -34,11 +36,28 @@ func main() {
 
 	httpHandler.RegisterRoutes(router)
 
-	wg.Add(1)
+	errorChannel := make(chan error, 1)
+
 	go func() {
 		defer wg.Done()
-		balancesHandler.StartListener(ctx)
+		if err := balancesHandler.StartListener(ctx); err != nil {
+			errorChannel <- err
+			cancel() // Отмена контекста при ошибке
+		}
 	}()
+
+	select {
+	case err := <-errorChannel:
+		switch err := err.(type) {
+		case *constants.CustomError:
+			log.Printf("Custom error")
+			c.JSON(http.StatusBadRequest, gin.H{"error": string(err.Type)})
+		default:
+			log.Printf("Error in one of the components")
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		}
+	case <-ctx.Done():
+	}
 
 	go func() {
 		err := router.Run(":8080")
