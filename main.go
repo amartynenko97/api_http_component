@@ -7,7 +7,6 @@ import (
 	"go_task/messaging"
 	"golang.org/x/net/context"
 	"log"
-	"net/http"
 	"sync"
 )
 
@@ -33,7 +32,7 @@ func main() {
 	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), errorHandler)
 	balancesHandler := balances.NewBalancesHandler(messageBroker.GetListeningChannel(), errorHandler)
 
-	httpHandler.RegisterRoutes(router, errorHandler)
+	httpHandler.RegisterRoutes(router)
 
 	errorChannel := make(chan error, 1)
 
@@ -42,7 +41,7 @@ func main() {
 		defer wg.Done()
 		err := router.Run(":8080")
 		if err != nil {
-			errorHandler.HandleError(http.StatusInternalServerError, gin.H{"error": "Failed to start the server"})
+			//errorHandler.HandleError(http.StatusInternalServerError, gin.H{"error": "Failed to start the server"})
 			cancel()
 		}
 	}()
@@ -51,7 +50,7 @@ func main() {
 		defer wg.Done()
 		if err := balancesHandler.StartListener(ctx); err != nil {
 			errorChannel <- err
-			cancel() // Отмена контекста при ошибке
+			cancel()
 		}
 	}()
 

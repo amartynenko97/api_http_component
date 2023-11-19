@@ -6,7 +6,6 @@ import (
 	"go_task"
 	"go_task/messaging"
 	"go_task/protofile"
-	"log"
 	"net/http"
 )
 
@@ -15,9 +14,10 @@ type HTTPHandler struct {
 	errorHandler      go_task.ErrorHandler
 }
 
-func NewHTTPHandler(publishingChannel messaging.PublishingChannel, errorHandler ErrorHandler) *HTTPHandler {
+func NewHTTPHandler(publishingChannel messaging.PublishingChannel, errorHandler go_task.ErrorHandler) *HTTPHandler {
 	return &HTTPHandler{
 		publishingChannel: publishingChannel,
+		errorHandler:      errorHandler,
 	}
 }
 
@@ -30,32 +30,23 @@ func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
 	var request protofile.CreateOrderRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		h.errorHandler.HandleError(c, http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	protoData, err := json.Marshal(&request)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to marshal account balance message"})
+		h.errorHandler.HandleError(c, http.StatusInternalServerError, gin.H{"error": "Failed to marshal account balance message"})
 		return
 	}
 
 	err = h.publishingChannel.PublishCreateAccountBalances(protoData)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to publish account balance"})
+		h.errorHandler.HandleError(c, http.StatusInternalServerError, gin.H{"error": "Failed to publish account balance"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Account balance created successfully"})
-}
-
-func (h *HTTPHandler) HandleError(c *gin.Context, statusCode int, data gin.H) {
-	if c != nil {
-		c.JSON(statusCode, data)
-	} else {
-		// Обработка ситуации без контекста Gin (например, вне HTTP-запроса)
-		log.Println("Handling error without Gin context:", data)
-	}
 }
 
 //func (h *HTTPHandler) GetAccountBalance(c *gin.Context) {

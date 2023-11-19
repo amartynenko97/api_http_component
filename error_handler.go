@@ -6,11 +6,12 @@ import (
 )
 
 type ErrorHandler interface {
-	HandleError(statusCode int, data gin.H)
+	HandleError(c *gin.Context, statusCode int, data gin.H)
 }
 
 type ErrorHandlerImpl struct{}
 
-func (e *ErrorHandlerImpl) HandleError(statusCode int, data gin.H) {
+func (e *ErrorHandlerImpl) HandleError(c *gin.Context, statusCode int, data gin.H) {
 	log.Printf("Error with status code %d: %v", statusCode, data)
+	c.JSON(statusCode, data)
 }
