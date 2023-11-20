@@ -1,19 +1,21 @@
 package balances
 
 import (
-	"github.com/gin-gonic/gin"
+	"encoding/json"
+	"go_task/constants"
 	"go_task/messaging"
 	"golang.org/x/net/context"
-	"net/http"
 )
 
 type BalancesHandler struct {
-	listeningChannel messaging.ListeningChannel
+	publishingChannel messaging.PublishingChannel
+	listeningChannel  messaging.ListeningChannel
 }
 
-func NewBalancesHandler(listeningChannel messaging.ListeningChannel) *BalancesHandler {
+func NewBalancesHandler(publishingChannel messaging.PublishingChannel, listeningChannel messaging.ListeningChannel) *BalancesHandler {
 	return &BalancesHandler{
-		listeningChannel: listeningChannel,
+		publishingChannel: publishingChannel,
+		listeningChannel:  listeningChannel,
 	}
 }
 
@@ -23,9 +25,8 @@ func (h *BalancesHandler) StartListener(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 
-		case delivery := <-h.listeningChannel.ConsumeCreateAccountBalances():
+		case delivery := <-h.listeningChannel.ConsumeCreateAccountBalancesFromHttpApi():
 			if err := h.processAccountBalance(delivery.Body); err != nil {
-				errorHandler.HandleError(http.StatusInternalServerError, gin.H{"error": "Failed to process account balance"})
 				return err
 			}
 		}
@@ -33,10 +34,20 @@ func (h *BalancesHandler) StartListener(ctx context.Context) error {
 }
 
 func (h *BalancesHandler) processAccountBalance(protoData []byte) error {
-	// Логика обработки сообщения
-	//if /* какое-то условие для ошибки */ {
-	//	return &constants.CustomError{Type: constants.AccountNotHaveBalance}
-	//}
-	// ...
+
+	errorResponse := constants.ErrorResponse{
+		Error: string(constants.NoSuchCurrency),
+	}
+
+	errorJSON, err := json.Marshal(errorResponse)
+	if err != nil {
+		return err
+	}
+
+	err = h.publishingChannel.PublishCreateAccountBalancesToHttpApi(errorJSON)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

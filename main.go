@@ -28,9 +28,8 @@ func main() {
 
 	router := gin.Default()
 
-	errorHandler := &ErrorHandlerImpl{}
-	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), errorHandler)
-	balancesHandler := balances.NewBalancesHandler(messageBroker.GetListeningChannel(), errorHandler)
+	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
+	balancesHandler := balances.NewBalancesHandler(messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
 
 	httpHandler.RegisterRoutes(router)
 
@@ -41,7 +40,6 @@ func main() {
 		defer wg.Done()
 		err := router.Run(":8080")
 		if err != nil {
-			//errorHandler.HandleError(http.StatusInternalServerError, gin.H{"error": "Failed to start the server"})
 			cancel()
 		}
 	}()

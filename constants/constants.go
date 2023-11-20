@@ -1,15 +1,11 @@
 package constants
 
+type ErrorResponse struct {
+	Error string `json:"error"`
+}
+
 type CustomErrorType string
 
 const (
-	AccountNotHaveBalance CustomErrorType = "AccountNotHaveBalance"
+	NoSuchCurrency CustomErrorType = "NoSuchCurrency"
 )
-
-type CustomError struct {
-	Type CustomErrorType
-}
-
-func (e *CustomError) Error() string {
-	return string(e.Type)
-}
