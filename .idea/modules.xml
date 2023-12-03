@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/go_task.iml" filepath="$PROJECT_DIR$/.idea/go_task.iml" />
-      <module fileurl="file://$PROJECT_DIR$/messaging.iml" filepath="$PROJECT_DIR$/messaging.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../api_http_component/.idea/api_http_component.iml" filepath="$PROJECT_DIR$/../api_http_component/.idea/api_http_component.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../api_http_component/messaging.iml" filepath="$PROJECT_DIR$/../api_http_component/messaging.iml" />
     </modules>
   </component>
 </project>

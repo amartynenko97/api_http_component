@@ -1,8 +1,7 @@
-package go_task
+package api_http_component
 
 import (
 	"github.com/gin-gonic/gin"
-	"go_task/balances"
 	"go_task/httpapi"
 	"go_task/messaging"
 	"golang.org/x/net/context"
@@ -29,11 +28,8 @@ func main() {
 	router := gin.Default()
 
 	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
-	balancesHandler := balances.NewBalancesHandler(messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
 
 	httpHandler.RegisterRoutes(router)
-
-	errorChannel := make(chan error, 1)
 
 	wg.Add(1)
 	go func() {
@@ -47,7 +43,6 @@ func main() {
 	go func() {
 		defer wg.Done()
 		if err := balancesHandler.StartListener(ctx); err != nil {
-			errorChannel <- err
 			cancel()
 		}
 	}()
