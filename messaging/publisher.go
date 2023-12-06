@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"api_http_component/constants"
 	"github.com/streadway/amqp"
 	"log"
 )
@@ -15,13 +16,9 @@ func NewPublisher(channel *amqp.Channel) *Publisher {
 	}
 }
 
-func (p *Publisher) PublishCreateAccountBalances(protoData []byte) error {
-	return p.publish(protoData, "balances_events", "rk_create_balance")
+func (p *Publisher) PublishCreateAccountToBalances(protoData []byte) error {
+	return p.publish(protoData, constants.ExNameBalances, constants.RkCreateAccountRequest)
 }
-
-//func (p *Publisher) PublishGetAccountBalances(protoData []byte) error {
-//	return p.publish(protoData, "orders_events", "rk_create_order")
-//}
 
 func (p *Publisher) publish(protoData []byte, exchange string, routingKey string) error {
 	err := p.channel.Publish(

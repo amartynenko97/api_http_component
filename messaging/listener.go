@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"api_http_component/constants"
 	"github.com/streadway/amqp"
 	"log"
 )
@@ -15,18 +16,14 @@ func NewListener(channel *amqp.Channel) *Listener {
 	}
 }
 
-func (l *Listener) ConsumeCreateAccountBalances() <-chan amqp.Delivery {
-	return l.consume("account_balance_queue_name", "account_balance_consumer")
+func (l *Listener) ConsumeCreateAccountFromBalances() <-chan amqp.Delivery {
+	return l.consume(constants.CreateAccountResponseQueue)
 }
 
-//func (l *Listener) ConsumeGetAccountBalances() <-chan amqp.Delivery {
-//	return l.consume("create_order_queue_name", "create_order_consumer")
-//}
-
-func (l *Listener) consume(queueName, consumerName string) <-chan amqp.Delivery {
+func (l *Listener) consume(queueName string) <-chan amqp.Delivery {
 	messages, err := l.channel.Consume(
 		queueName,
-		consumerName,
+		"",
 		true,
 		false,
 		false,

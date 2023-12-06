@@ -5,11 +5,9 @@ import (
 )
 
 type PublishingChannel interface {
-	PublishCreateAccountBalancesToBalances(protoData []byte) error
-	PublishCreateAccountBalancesToHttpApi(protoData []byte) error
+	PublishCreateAccountToBalances(protoData []byte) error
 }
 
 type ListeningChannel interface {
-	ConsumeCreateAccountBalancesFromBalances() <-chan amqp.Delivery
-	ConsumeCreateAccountBalancesFromHttpApi() <-chan amqp.Delivery
+	ConsumeCreateAccountFromBalances() <-chan amqp.Delivery
 }
