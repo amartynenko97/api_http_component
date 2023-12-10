@@ -33,9 +33,6 @@ func main() {
 	httpHandler.RegisterRoutes(router)
 	listenerReady := make(chan struct{})
 
-	httpHandler.SetCreateAccountCallback(func(ctx context.Context, protoData []byte) {
-		looger.Info("message handle")
-	})
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -52,6 +49,5 @@ func main() {
 			cancel()
 		}
 	}()
-
 	wg.Wait()
 }

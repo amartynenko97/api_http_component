@@ -6,6 +6,7 @@ import (
 	"api_http_component/protofile"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/streadway/amqp"
 	"golang.org/x/net/context"
 	"net/http"
 )
@@ -13,40 +14,58 @@ import (
 type HTTPHandler struct {
 	publishingChannel messaging.PublishingChannel
 	listeningChannel  messaging.ListeningChannel
-	createAccountCB   func(ctx context.Context, protoData []byte)
+	messageQueue      chan Message
+}
+
+type Message struct {
+	QueueType string
+	Delivery  amqp.Delivery
 }
 
 func NewHTTPHandler(publishingChannel messaging.PublishingChannel, listeningChannel messaging.ListeningChannel) *HTTPHandler {
 	return &HTTPHandler{
 		publishingChannel: publishingChannel,
 		listeningChannel:  listeningChannel,
+		messageQueue:      make(chan Message),
 	}
 }
 
-func (h *HTTPHandler) SetCreateAccountCallback(cb func(ctx context.Context, protoData []byte)) {
-	h.createAccountCB = cb
+func (h *HTTPHandler) RegisterRoutes(router *gin.Engine) {
+	router.POST("/createAccountBalance", h.CreateAccountBalances)
 }
 
 func (h *HTTPHandler) StartListener(ctx context.Context, ready chan<- struct{}) {
 	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
+		defer close(ready)
 
-			case delivery := <-h.listeningChannel.ConsumeCreateAccountFromBalances():
-				go h.createAccountCB(ctx, delivery.Body)
+		stopCh := make(chan struct{})
+		defer close(stopCh)
+
+		createAccountMessages := h.listeningChannel.ConsumeCreateAccountFromBalances(stopCh)
+
+		go func() {
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case delivery, ok := <-createAccountMessages:
+					if !ok {
+						return
+					}
+					h.messageQueue <- Message{QueueType: "CreateAccount", Delivery: delivery}
+				}
 			}
+		}()
+
+		select {
+		case <-ctx.Done():
+			close(stopCh)
+			return
 		}
 	}()
-	close(ready)
 }
 
-func (h *HTTPHandler) RegisterRoutes(router *gin.Engine) {
-	router.POST("/createAccountBalance", h.CreateAccountBalance)
-}
-
-func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
+func (h *HTTPHandler) CreateAccountBalances(c *gin.Context) {
 	var request protofile.CreateOrderRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
@@ -66,12 +85,13 @@ func (h *HTTPHandler) CreateAccountBalance(c *gin.Context) {
 		return
 	}
 
-	go func(protoData []byte, c *gin.Context) {
-		if err := h.processCreateAccount(protoData); err != nil {
-			h.handleListenerError(err, c)
-		}
-	}(protoData, c)
+	select {
+	case delivery := <-h.messageQueue:
+		switch delivery.QueueType {
+		case "CreateAccount":
 
+		}
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "Account created successfully"})
 }
 

@@ -9,5 +9,5 @@ type PublishingChannel interface {
 }
 
 type ListeningChannel interface {
-	ConsumeCreateAccountFromBalances() <-chan amqp.Delivery
+	ConsumeCreateAccountFromBalances(stopCh <-chan struct{}) <-chan amqp.Delivery
 }
