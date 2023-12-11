@@ -21,6 +21,11 @@ message CreateAccountBalance {
   string newBalance = 3;
 }
 
+message CreateAccountRequest {
+  string userId = 1;
+  string userName = 2;
+}
+
 enum OrderType {
   TYPE_UNSPECIFIED = 0;
   TYPE_MARKET = 1;
@@ -40,5 +45,7 @@ enum Direction {
   DIRECTION_SELL = 1;
   DIRECTION_BUY = 2;
 }
+
+
 
 

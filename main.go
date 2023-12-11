@@ -15,7 +15,7 @@ func main() {
 	defer cancel()
 	var wg sync.WaitGroup
 
-	looger := logger.SetupLogger()
+	logger := logger.SetupLogger()
 
 	rabbitMQConfig := messaging.RabbitMQConfig{
 		URL: config.RabbitConfig,
@@ -23,13 +23,13 @@ func main() {
 
 	messageBroker, err := messaging.NewMessageBroker(rabbitMQConfig)
 	if err != nil {
-		looger.Info("Failed to initialize MessageBroker")
+		logger.Info("Failed to initialize MessageBroker")
 		return
 	}
 	defer messageBroker.Close()
 
 	router := gin.Default()
-	httpHandler := httpapi.NewHTTPHandler(messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
+	httpHandler := httpapi.NewHTTPHandler(logger, messageBroker.GetPublishingChannel(), messageBroker.GetListeningChannel())
 	httpHandler.RegisterRoutes(router)
 	listenerReady := make(chan struct{})
 

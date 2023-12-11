@@ -6,6 +6,7 @@ import (
 	"api_http_component/protofile"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 	"github.com/streadway/amqp"
 	"golang.org/x/net/context"
 	"google.golang.org/protobuf/proto"
@@ -13,6 +14,7 @@ import (
 )
 
 type HTTPHandler struct {
+	logger            *logrus.Logger
 	publishingChannel messaging.PublishingChannel
 	listeningChannel  messaging.ListeningChannel
 	messageQueue      chan Message
@@ -23,8 +25,9 @@ type Message struct {
 	Delivery  amqp.Delivery
 }
 
-func NewHTTPHandler(publishingChannel messaging.PublishingChannel, listeningChannel messaging.ListeningChannel) *HTTPHandler {
+func NewHTTPHandler(logger *logrus.Logger, publishingChannel messaging.PublishingChannel, listeningChannel messaging.ListeningChannel) *HTTPHandler {
 	return &HTTPHandler{
+		logger:            logger,
 		publishingChannel: publishingChannel,
 		listeningChannel:  listeningChannel,
 		messageQueue:      make(chan Message),
@@ -32,7 +35,7 @@ func NewHTTPHandler(publishingChannel messaging.PublishingChannel, listeningChan
 }
 
 func (h *HTTPHandler) RegisterRoutes(router *gin.Engine) {
-	router.POST("/createAccountBalance", h.CreateAccountBalances)
+	router.POST("/createAccountBalance", h.CreateAccount)
 }
 
 func (h *HTTPHandler) StartListener(ctx context.Context, ready chan<- struct{}) {
@@ -66,8 +69,8 @@ func (h *HTTPHandler) StartListener(ctx context.Context, ready chan<- struct{}) 
 	}()
 }
 
-func (h *HTTPHandler) CreateAccountBalances(c *gin.Context) {
-	var request protofile.CreateOrderRequest
+func (h *HTTPHandler) CreateAccount(c *gin.Context) {
+	var request protofile.CreateAccountRequest
 
 	if err := c.ShouldBindJSON(&request); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
