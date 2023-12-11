@@ -47,10 +47,16 @@ func (m *MessageBroker) GetListeningChannel() ListeningChannel {
 
 func (m *MessageBroker) Close() {
 	if m.channel != nil {
-		m.channel.Close()
+		err := m.channel.Close()
+		if err != nil {
+			return
+		}
 	}
 
 	if m.conn != nil {
-		m.conn.Close()
+		err := m.conn.Close()
+		if err != nil {
+			return
+		}
 	}
 }

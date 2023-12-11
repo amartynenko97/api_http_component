@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package protofile;
+option go_package = "./protofile/";
+
+enum BalancesErrorCodes {
+  BALANCE_ERROR_CODE_NONE = 0;
+  BALANCE_ERROR_CODE_INTERNAL = 1;
+  BALANCE_ERROR_CODE_NOT_ENOUGH_BALANCE = 2;
+  BALANCE_ERROR_CODE_NOT_EXISTS_BALANCE = 3;
+}
+
+message BalanceErrorMessage {
+  BalancesErrorCodes error_code = 1;
+  string message = 2;
+}

@@ -5,3 +5,7 @@ const (
 	CreateAccountResponseQueue = "q.balances.request.CreateAccountResponse"
 	RkCreateAccountRequest     = "r.balances.#.CreateAccountRequest.#"
 )
+
+const (
+	QueueTypeCreateAccount = "CreateAccount"
+)
